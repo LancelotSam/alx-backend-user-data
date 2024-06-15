@@ -58,7 +58,7 @@ class DB:
             raise
         return new_user
 
-    def find_user_by(self, **kwargs: Dict[str, str]) -> User:
+    def find_user_by(self, **kwargs) -> User:
         """Find a user by specified attributes.
 
         Raises:
@@ -68,15 +68,13 @@ class DB:
         Returns:
             User: First row found in the `users` table.
         """
-        session = self._session
-        try:
-            user = session.query(User).filter_by(**kwargs).one()
-        except NoResultFound:
-            raise NoResultFound()
-        except InvalidRequestError:
-            raise InvalidRequestError()
-        # print("Type of user: {}".format(type(user)))
-        return user
+        for key in kwargs.keys():
+            if not hasattr(User, key):
+                raise InvalidRequestError()
+            user = self.__session.query(User).filter_by(**kwargs).first()
+        if user:
+            return user
+        raise NoResultFound
 
     def update_user(self, user_id: int, **kwargs) -> None:
         """Updates a user's attributes by user ID and arbitrary keyword
