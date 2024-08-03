@@ -1,69 +1,50 @@
 #!/usr/bin/env python3
+"""
+A module: Defines an template class for all template
+for all authentication system implemented in this application
+"""
+from flask import request
 
-from typing import List, TypeVar
-from flask import Flask, request
+from typing import (
+    List,
+    TypeVar
+)
 
 
 class Auth:
-    ''' A Class to manage the API authentication.
-    '''
-
-    def require_auth(
-            self,
-            path: str,
-            excluded_paths: List[str]
-            ) -> bool:
-        ''' Required auth
-        '''
-        if path is None or excluded_paths is None or not excluded_paths:
+    """
+    API authentication class
+    """
+    def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
+        """
+        Requires authentication on every request
+        """
+        if (
+            path is None
+            or excluded_paths is None
+            or len(excluded_paths) == 0
+        ):
             return True
-
-        # handle * at end of excluded paths
-        if path[-1] == '/':
-            path = path[:-1]
-
-        contains_slash = False
-        for excluded_path in excluded_paths:
-            if excluded_path[-1] == '/':
-                excluded_path = excluded_path[:-1]
-                contains_slash = True
-
-            if excluded_path.endswith('*'):
-                idx_after_last_slash = excluded_path.rfind('/') + 1
-                excluded = excluded_path[idx_after_last_slash:-1]
-
-                idx_after_last_slash = path.rfind('/') + 1
-                tmp_path = path[idx_after_last_slash:]
-
-                if excluded in tmp_path:
+        for url in excluded_paths:
+            if url.endswith('*'):
+                if url[:-1] in path:
                     return False
-
-            if contains_slash:
-                contains_slash = False
-
-        path += '/'
-
-        if path in excluded_paths:
-            return False
-
+            else:
+                if path in url or path + '/' in url:
+                    return False
         return True
 
-    def authorization_header(
-            self,
-            request=None
-            ) -> str:
-        '''Auth header
-        '''
-        if request is None:
+    def authorization_header(self, request=None) -> str:
+        """
+        Extract authorization header
+        """
+        auth = request.headers.get('Authorization', None) if request else None
+        if request is None or auth is None:
             return None
+        return auth
 
-        return request.headers.get('Authorization')
-
-    def current_user(
-            self,
-            request=None
-            ) -> TypeVar('User'):
-        ''' Current User
-        '''
-        request = Flask(__name__)
+    def current_user(self, request=None) -> TypeVar('User'):
+        """
+        Holds the current authenticated logged in user
+        """
         return None
